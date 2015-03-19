@@ -1,12 +1,7 @@
 package gameworld;
 
 
-import java.awt.Graphics;
-import java.util.ArrayList;
 
-import jdk.internal.dynalink.beans.StaticClass;
-
-import gamehelpers.*;
 import gameobjects.Diamond;
 import gameobjects.Icon;
 
@@ -18,6 +13,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
+
 
 public class GameRenderer {
 	
@@ -69,7 +65,7 @@ public class GameRenderer {
         		Icon t = myWorld.getIcon(row, col);
         		if (t != null){
         			drawOneCell(shapeRenderer, row, col, t);
-        			if(t.getSpecial()==1&&(t.getSpecialState()>0||flashingState<10))
+        			if(t.getSpecial()==1&&(t.getSpecialState()>1||(t.getSpecialState()==1&&flashingState<10)))
         				drawOneSpecialCell(shapeRenderer, row, col);    			
         		}
 
@@ -91,8 +87,7 @@ public class GameRenderer {
         		}
         	}    
         }
-
-        
+   
         if (myWorld.getCollapsing()){
         	for (AnimatedDiamond d : myWorld.getMovingDiamonds()){
         		int col = d.col();
@@ -218,5 +213,5 @@ class AnimatedDiamond extends Diamond{
 			currentPixel = endPixel;
 		}
 	}
-	
 }
+

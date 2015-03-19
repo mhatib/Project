@@ -22,7 +22,7 @@ public class Icon {
 	
 	public void setSpecial(int t){
 		this.special = t;
-		this.specialState = 2;
+		this.specialState = 3;
 	}
 	
 	public void reduceSpecialStateByOne(){

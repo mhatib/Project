@@ -11,22 +11,30 @@ public class GameWorld{
 
 	public static final int SIZE = 140;
 	private static final int BASE_SCORE = 10;
+	
 	private Generator gen;
+	private Icon[][] grid;
+	
+	private int width;
+	private int height;
+	
 	private int score;
 	private int life;
 	private int magic;
-	private Icon[][] grid;
+	
 	Diamond currentDiamond;
 	Diamond nextDiamond;
+	
 	private int scoreCounter = 0;
 	private int flashingState = 0;
 	private boolean collapsing = false;
     private boolean filling = false;
-    private ArrayList<Diamond> diamondsToCollapse = null;
     private int numberOfFlashes = 3;
-    private ArrayList<AnimatedDiamond> movingDiamonds = null;
     private int fallPerFrame = 40; 
+    private ArrayList<Diamond> diamondsToCollapse = null;    
+    private ArrayList<AnimatedDiamond> movingDiamonds = null;   
     private ArrayList<AnimatedDiamond> fillingDiamonds = null;
+    
     private static float screenHeight;
     private static float screenWidth;
     public enum GameState {
@@ -35,7 +43,9 @@ public class GameWorld{
     public GameState currentState;
 
     	
-	public GameWorld(int height, int width, Generator generator,float w,float h){    
+	public GameWorld(int height, int width, Generator generator,float w,float h){   
+		this.width = width;
+		this.height = height;
 	    grid = new Icon[height][width];
 	    gen = generator;
 	    do{gen.initialize(grid);}while(!findMatch(false).isEmpty());
@@ -68,12 +78,12 @@ public class GameWorld{
 
 
 	public int getWidth() {
-		return grid[0].length;
+		return width;
 	}
 
 
 	public int getHeight() {
-		return grid.length;
+		return height;
 	}
 
 
@@ -163,64 +173,50 @@ public class GameWorld{
 	}
 	
 
-	public ArrayList<Diamond> findMatch(boolean doMarkAndUpdateScore) {
+	public ArrayList<Diamond> findMatch(boolean update) {
 
 		ArrayList<Diamond> aListTemp = new ArrayList<Diamond>(); 
 		int counter = 0; 
 		scoreCounter = 0;
 		
 		//vertical
-	    for(int i = 0; i < grid[0].length; i++){
-	    	for(int j = 0; j < grid.length; j++){ 
-	    		if(j < grid.length - 3 && (grid[j][i].equals(grid[j+1][i])) && (grid[j][i].equals(grid[j+2][i])) && (grid[j][i].equals(grid[j+3][i]))){ 
+	    for(int i = 0; i < width; i++){
+	    	for(int j = 0; j < height; j++){ 
+	    		if(j < height - 3 && (grid[j][i].equals(grid[j+1][i])) && (grid[j][i].equals(grid[j+2][i])) && (grid[j][i].equals(grid[j+3][i]))){ 
 	    			aListTemp.add(new Diamond(j, i, grid[j][i])); 
 	    			counter++; 
 	    		}
-
-	    		else if(j > 0 && j < grid.length - 2 && grid[j-1][i].equals(grid[j][i]) && grid[j+1][i].equals(grid[j][i]) && grid[j+2][i].equals(grid[j][i])){ 
+	    		else if(j > 0 && j < height - 2 && grid[j-1][i].equals(grid[j][i]) && grid[j+1][i].equals(grid[j][i]) && grid[j+2][i].equals(grid[j][i])){ 
 	    			aListTemp.add(new Diamond(j, i, grid[j][i])); 
 	    			counter++;
 	    		}
-
-	    		else if(j > 1 && j<grid.length-1 && grid[j][i].equals(grid[j-1][i]) && grid[j-2][i].equals(grid[j][i]) && grid[j][i].equals(grid[j+1][i])){ 
+	    		else if(j > 1 && j< height - 1 && grid[j][i].equals(grid[j-1][i]) && grid[j-2][i].equals(grid[j][i]) && grid[j][i].equals(grid[j+1][i])){ 
 	    			aListTemp.add(new Diamond(j, i, grid[j][i])); 
 	    			counter++;
-	    		}
-	    		
+	    		}    		
 	    		else if(j > 2 && grid[j][i].equals(grid[j-1][i]) && grid[j-2][i].equals(grid[j][i]) && grid[j][i].equals(grid[j-3][i])){ 
 	    			aListTemp.add(new Diamond(j, i, grid[j][i])); 
 	    			counter++;
 	    		}
 	    	}
 
-	    	if(counter == 4 && doMarkAndUpdateScore){ 
-	    		score = score + BASE_SCORE; 
-	    		life ++;
-	    		scoreCounter ++;
-	    	}
-
-	    	else if(counter > 4 && doMarkAndUpdateScore){
-	    		score = score + (BASE_SCORE * (int)Math.pow((double)2, (double)(counter - 4))); 	
-	    		life += (int)Math.pow((double)2, (double)(counter - 4));
-	    		scoreCounter += counter-3;
-	    	}
-
+	    	recordScore(counter, update);
 	    	counter = 0;
 	    }
-
 	    counter = 0;
+	    
 	    //horizontol
-	    for(int i = 0; i < grid.length; i++){
-	    	for(int j = 0; j < grid[0].length; j++){
-	    		if(j < grid[j].length - 3 && grid[i][j].equals(grid[i][j+1]) && grid[i][j].equals(grid[i][j+2]) && grid[i][j].equals(grid[i][j+3])){ 
+	    for(int i = 0; i < height; i++){
+	    	for(int j = 0; j < width; j++){
+	    		if(j < width - 3 && grid[i][j].equals(grid[i][j+1]) && grid[i][j].equals(grid[i][j+2]) && grid[i][j].equals(grid[i][j+3])){ 
 	    			aListTemp.add(new Diamond(i, j, grid[i][j])); 
 	    			counter++;
 	    		}
-	    		else if(j > 0 && j < grid[j].length - 2 && grid[i][j-1].equals(grid[i][j]) && grid[i][j+1].equals(grid[i][j]) && grid[i][j+2].equals(grid[i][j])){ 
+	    		else if(j > 0 && j < width - 2 && grid[i][j-1].equals(grid[i][j]) && grid[i][j+1].equals(grid[i][j]) && grid[i][j+2].equals(grid[i][j])){ 
 	    			aListTemp.add(new Diamond(i, j, grid[i][j])); 
 	    			counter++;
 	    		}
-	    		else if(j > 1 && j<grid[j].length - 1 && grid[i][j].equals(grid[i][j-1]) && grid[i][j-2].equals(grid[i][j]) && grid[i][j+1].equals(grid[i][j])){ 
+	    		else if(j > 1 && j< width - 1 && grid[i][j].equals(grid[i][j-1]) && grid[i][j-2].equals(grid[i][j]) && grid[i][j+1].equals(grid[i][j])){ 
 	    			aListTemp.add(new Diamond(i, j, grid[i][j]));
 	    			counter++;
 	    		}
@@ -230,121 +226,110 @@ public class GameWorld{
 	    		}
 	    	}
 
-	    	if(counter == 4 && doMarkAndUpdateScore){
-	    		score = score + BASE_SCORE;
-	    		life++;
-	    		scoreCounter++;
-	    	}
-	    	else if(counter > 4 && doMarkAndUpdateScore){
-	    		score = score + (BASE_SCORE * (int)Math.pow((double)2, (double)(counter - 4)));		
-	    		life += (int)Math.pow((double)2, (double)(counter - 4));
-	    		scoreCounter+=counter-3;
-	    	}
+	    	recordScore(counter, update);
 	    	counter = 0;
-	    }
-	    
+	    }    
 	    counter = 0;
 	    
 	    //going down
 	    boolean isContinue = false;
-	    for(int i = 0; i < grid.length; i++){
-	    	for(int j = 0; j < grid[0].length; j++){
-	    		if(j < grid[j].length - 3 && i < grid[j].length -3 && grid[i][j].equals(grid[i+1][j+1]) && grid[i][j].equals(grid[i+2][j+2]) && grid[i][j].equals(grid[i+3][j+3])){ 
+	    for(int i = 0; i < height; i++){
+	    	for(int j = 0; j < width; j++){
+	    		if(j < width - 3 && i < height -3 && grid[i][j].equals(grid[i+1][j+1]) && grid[i][j].equals(grid[i+2][j+2]) && grid[i][j].equals(grid[i+3][j+3])){ 
 	    			aListTemp.add(new Diamond(i, j, grid[i][j])); 
 	    			counter++;
 	    		}
-	    		else if(j > 0 && i > 0 && j < grid[j].length - 2 && i < grid[j].length -2 && grid[i-1][j-1].equals(grid[i][j]) && grid[i+1][j+1].equals(grid[i][j]) && grid[i+2][j+2].equals(grid[i][j])){ 
+	    		else if(j > 0 && i > 0 && j < width - 2 && i < height -2 && grid[i-1][j-1].equals(grid[i][j]) && grid[i+1][j+1].equals(grid[i][j]) && grid[i+2][j+2].equals(grid[i][j])){ 
 	    			aListTemp.add(new Diamond(i, j, grid[i][j])); 
 	    			counter++;
 	    		}
-	    		else if(j > 1 && i >1 && j < grid[j].length - 1 && i < grid[j].length -1 && grid[i][j].equals(grid[i-1][j-1]) && grid[i-2][j-2].equals(grid[i][j]) && grid[i+1][j+1].equals(grid[i][j])){ 
+	    		else if(j > 1 && i > 1 && j < width - 1 && i < height -1 && grid[i][j].equals(grid[i-1][j-1]) && grid[i-2][j-2].equals(grid[i][j]) && grid[i+1][j+1].equals(grid[i][j])){ 
 	    			aListTemp.add(new Diamond(i, j, grid[i][j]));
 	    			counter++;
 	    		}
-	    		else if(j > 2 && i>2 && grid[i][j].equals(grid[i-1][j-1]) && grid[i-2][j-2].equals(grid[i][j]) && grid[i-3][j-3].equals(grid[i][j])){ 
+	    		else if(j > 2 && i > 2 && grid[i][j].equals(grid[i-1][j-1]) && grid[i-2][j-2].equals(grid[i][j]) && grid[i-3][j-3].equals(grid[i][j])){ 
 	    			aListTemp.add(new Diamond(i, j, grid[i][j]));
 	    			counter++;
 	    		}
 	    	}
-	    	if(counter>0 && i<grid.length-1)
+	    	if(counter>0 && i<height-1)
 	    		isContinue = true;
 	    	else 
 	    		isContinue = false;
-	    	if(counter == 4 && doMarkAndUpdateScore && !isContinue){
-	    		score = score + BASE_SCORE;
-	    		life++;
-	    		scoreCounter++;
-	    	}
-	    	else if(counter > 4 && doMarkAndUpdateScore && !isContinue){
-	    		score = score + (BASE_SCORE * (int)Math.pow((double)2, (double)(counter - 4)));		
-	    		life += (int)Math.pow((double)2, (double)(counter - 4));
-	    		scoreCounter+=counter-3;
-	    	}
-	    	if(!isContinue)
+	    	
+	    	if(!isContinue){
+	    		recordScore(counter, update);
 	    		counter = 0;
-	    }
-	    
+	    	}
+	    }	    
 	    counter = 0;
 	    isContinue = false;
+	    
 	    //going up
-	    for(int i = 0; i < grid.length; i++){
-	    	for(int j = 0; j < grid[0].length; j++){
-	    		if(j < grid[j].length - 3 && i > 2 && grid[i][j].equals(grid[i-1][j+1]) && grid[i][j].equals(grid[i-2][j+2]) && grid[i][j].equals(grid[i-3][j+3])){ 
+	    for(int i = 0; i < height; i++){
+	    	for(int j = 0; j < width; j++){
+	    		if(j < width - 3 && i > 2 && grid[i][j].equals(grid[i-1][j+1]) && grid[i][j].equals(grid[i-2][j+2]) && grid[i][j].equals(grid[i-3][j+3])){ 
 	    			aListTemp.add(new Diamond(i, j, grid[i][j])); 
 	    			counter++;
 	    		}
-	    		else if(j > 0 && i > 1 && j < grid[j].length - 2 && i < grid[j].length -1 && grid[i+1][j-1].equals(grid[i][j]) && grid[i-1][j+1].equals(grid[i][j]) && grid[i-2][j+2].equals(grid[i][j])){ 
+	    		else if(j > 0 && i > 1 && j < width - 2 && i < height -1 && grid[i+1][j-1].equals(grid[i][j]) && grid[i-1][j+1].equals(grid[i][j]) && grid[i-2][j+2].equals(grid[i][j])){ 
 	    			aListTemp.add(new Diamond(i, j, grid[i][j])); 
 	    			counter++;
 	    		}
-	    		else if(j > 1 && i <grid[j].length-2 && j < grid[j].length - 1 && i > 0 && grid[i][j].equals(grid[i-1][j+1]) && grid[i+1][j-1].equals(grid[i][j]) && grid[i+2][j-2].equals(grid[i][j])){ 
+	    		else if(j > 1 && i < height - 2 && j < width - 1 && i > 0 && grid[i][j].equals(grid[i-1][j+1]) && grid[i+1][j-1].equals(grid[i][j]) && grid[i+2][j-2].equals(grid[i][j])){ 
 	    			aListTemp.add(new Diamond(i, j, grid[i][j]));
 	    			counter++;
 	    		}
-	    		else if(j > 2 && i<grid[j].length-3 && grid[i][j].equals(grid[i+1][j-1]) && grid[i+2][j-2].equals(grid[i][j]) && grid[i+3][j-3].equals(grid[i][j])){ 
+	    		else if(j > 2 && i< height - 3 && grid[i][j].equals(grid[i+1][j-1]) && grid[i+2][j-2].equals(grid[i][j]) && grid[i+3][j-3].equals(grid[i][j])){ 
 	    			aListTemp.add(new Diamond(i, j, grid[i][j]));
 	    			counter++;
 	    		}
 	    	}
-	    	if(counter>0 && i<grid.length-1)
+	    	if(counter>0 && i<height-1)
 	    		isContinue = true;
 	    	else 
 	    		isContinue = false;
-	    	if(counter == 4 && doMarkAndUpdateScore && !isContinue){
-	    		score = score + BASE_SCORE;
-	    		life++;
-	    		scoreCounter++;
-	    	}
-	    	else if(counter > 4 && doMarkAndUpdateScore && !isContinue){
-	    		score = score + (BASE_SCORE * (int)Math.pow((double)2, (double)(counter - 4)));		
-	    		life += (int)Math.pow((double)2, (double)(counter - 4));
-	    		scoreCounter+=counter-3;
-	    	}
-	    	if(!isContinue)
+	    	if(!isContinue){
+	    		recordScore(counter, update);
 	    		counter = 0;
+	    	}
 	    }
 	    
-	    if(doMarkAndUpdateScore){
+	    if(update){
 	    	for(int i = 0; i < aListTemp.size(); i++){
 	    		setIcon(aListTemp.get(i).row(), aListTemp.get(i).col(), null);
 	    	}
 	    }
+	    
 	    if(aListTemp.size()>0){	    
 	    	for(int i=0;i<aListTemp.size();i++){
 	    		if(aListTemp.get(i).getIcon().getSpecial()==1){
-	    			System.out.println("aa");
 	    			magic++;
 	    		}
 	    	}
 	    }
 	    return aListTemp;
 	}
+	
+	public void recordScore(int counter, boolean update){
+		if(counter == 4 && update){ 
+    		score = score + BASE_SCORE; 
+    		life ++;
+    		scoreCounter ++;
+    	}
+
+    	else if(counter > 4 && update){
+    		score = score + (BASE_SCORE * (int)Math.pow((double)2, (double)(counter - 4))); 	
+    		life += (int)Math.pow((double)2, (double)(counter - 4));
+    		scoreCounter += counter-3;
+    	}
+	}
 
 
 	public ArrayList<Diamond> collapseColumn(int col) {
 		ArrayList<Diamond> aList = new ArrayList<Diamond>();
 		
-		for(int i = grid.length-1; i > 0; i--){
+		for(int i = height-1; i > 0; i--){
 			int switchRow = i;
 			while(grid[switchRow][col] == null && switchRow > 0){ 
 				switchRow--; 
@@ -364,7 +349,7 @@ public class GameWorld{
 	public ArrayList<Diamond> fillColumn(int col) {
 		ArrayList<Diamond> aList = new ArrayList<Diamond>();
 		  
-	    for(int i = 0; i < grid.length; i++){ 
+	    for(int i = 0; i < height; i++){ 
 	    	if(grid[i][col] != null){ 
 	    		break;
 	    	}
@@ -376,6 +361,16 @@ public class GameWorld{
 	    
 	    return aList;
 	}
+	
+	private void initializeCellsToFill(){
+	    fillingDiamonds = new ArrayList<AnimatedDiamond>();
+	    for (int col = 0; col < getWidth(); ++col){
+	    	ArrayList<Diamond> currentNewDiamonds = fillColumn(col);
+	    	for (Diamond d : currentNewDiamonds){
+	    		fillingDiamonds.add(new AnimatedDiamond(d,-1,screenHeight,getHeight()));
+	    	}
+	    }
+	 }
 	
 	public void update(){
 		switch (currentState) {
@@ -402,7 +397,7 @@ public class GameWorld{
         	flashingState--;
         	if (flashingState == 0){
         		ArrayList<Diamond> currentMovedDiamonds = new ArrayList<Diamond>();
-        		for (int col = 0; col <getWidth(); ++col){
+        		for (int col = 0; col<width; ++col){
         			currentMovedDiamonds.addAll(collapseColumn(col));
         		}
         		collapsing = true;
@@ -455,15 +450,6 @@ public class GameWorld{
     	   currentState = GameState.GAMEOVER;
 	}
 	
-	private void initializeCellsToFill(){
-	    fillingDiamonds = new ArrayList<AnimatedDiamond>();
-	    for (int col = 0; col < getWidth(); ++col){
-	    	ArrayList<Diamond> currentNewDiamonds = fillColumn(col);
-	    	for (Diamond d : currentNewDiamonds){
-	    		fillingDiamonds.add(new AnimatedDiamond(d,-1,screenHeight,getHeight()));
-	    	}
-	    }
-	  }
 
 }
 
