@@ -13,6 +13,11 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.InputListener;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
 
 
 public class GameRenderer {
@@ -32,6 +37,8 @@ public class GameRenderer {
     private static float screenWidth;
     private static float screenHeight;
     private int flashingState;
+    private Stage stage;
+    private TextButton button;
 
 
     public GameRenderer(GameWorld world,float w,float h) {
@@ -114,6 +121,29 @@ public class GameRenderer {
         	}
           
         }
+        
+        stage = new Stage();        //** window is stage **//
+        stage.clear();
+        Gdx.input.setInputProcessor(stage); //** stage is responsive **//
+        
+        TextButtonStyle style = new TextButtonStyle(); //** Button properties **//       
+        style.font = font;
+        
+        button = new TextButton("PRESS ME", style); //** Button text and style **//
+        button.setPosition(100, 100); //** Button location **//
+        button.setHeight(300); //** Button Height **//
+        button.setWidth(600); //** Button Width **//
+        button.addListener(new InputListener() {
+            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
+                    Gdx.app.log("my app", "Pressed"); //** Usually used to start Game, etc. **//
+                    return true;
+            }
+            
+            public void touchUp (InputEvent event, float x, float y, int pointer, int button) {
+                    Gdx.app.log("my app", "Released");
+            }
+        });
+        
         
     }
     
