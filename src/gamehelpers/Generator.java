@@ -2,6 +2,8 @@ package gamehelpers;
 
 import java.util.Random;
 
+
+
 import gameobjects.*;
 
 public class Generator{
@@ -42,6 +44,16 @@ public class Generator{
 		int b = randomNumber(grid[0].length);
 		grid[a][b].setSpecial(1);
 		
+	}
+	
+	public void setSomethingSpecial(Icon[][] grid,int n, int specialType){
+		for(int i=0;i<n;i++){
+			int a,b;
+			do{
+				a = randomNumber(grid.length);
+				b = randomNumber(grid[0].length);}while(grid[a][b].getSpecial()!=0);
+			grid[a][b].setSpecial(specialType);
+		}
 	}
 
 }

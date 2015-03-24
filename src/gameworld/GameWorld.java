@@ -2,6 +2,12 @@ package gameworld;
 
 import java.util.ArrayList;
 
+import gamehelpers.AssetLoader;
+import gamehelpers.Timer;
+import gameobjects.SimpleButton;
+import gameworld.AnimatedDiamond;
+import gameworld.GameWorld.GameState;
+
 
 import gamehelpers.Generator;
 import gameobjects.Diamond;
@@ -9,7 +15,7 @@ import gameobjects.Icon;
 
 public class GameWorld{
 
-	public static final int SIZE = 140;
+	public static final int SIZE = 150;
 	private static final int BASE_SCORE = 10;
 	
 	private Generator gen;
@@ -40,8 +46,11 @@ public class GameWorld{
     public enum GameState {
         READY, RUNNING, GAMEOVER, HIGHSCORE
     }
-    public GameState currentState;
-
+    private GameState currentState;
+    
+    private Timer timer;
+    private int waitingTime = 20;
+    private ArrayList<SimpleButton> powerUpButtons = new ArrayList<SimpleButton>();
     	
 	public GameWorld(int height, int width, Generator generator,float w,float h){   
 		this.width = width;
@@ -50,13 +59,20 @@ public class GameWorld{
 	    gen = generator;
 	    do{gen.initialize(grid);}while(!findMatch(false).isEmpty());
 	    score = 0;
-	    life = 5;
+	    life = 10;
 	    magic = 0;
 	    currentDiamond = null;
 	    nextDiamond = null;
 	    screenHeight = h;
 	    screenWidth = w;
 	    currentState = GameState.RUNNING;
+	    timer = new Timer(waitingTime);
+	    powerUpButtons.add(new SimpleButton((screenWidth-SIZE*width)/2, (screenHeight-SIZE*height)/2-SIZE, SIZE, SIZE,AssetLoader.lifeButtonUp,AssetLoader.lifeButtonDown, screenHeight));
+	    powerUpButtons.add(new SimpleButton((screenWidth-SIZE*width)/2+SIZE*2, (screenHeight-SIZE*height)/2-SIZE, SIZE, SIZE,AssetLoader.magicButtonUp,AssetLoader.magicButtonDown, screenHeight));
+	    powerUpButtons.add(new SimpleButton((screenWidth-SIZE*width)/2+SIZE*2, (screenHeight-SIZE*height)/2-SIZE*2, SIZE, SIZE,AssetLoader.magicButtonUp,AssetLoader.magicButtonDown, screenHeight));
+	    powerUpButtons.add(new SimpleButton((screenWidth-SIZE*width)/2+SIZE*4, (screenHeight-SIZE*height)/2-SIZE, SIZE, SIZE,AssetLoader.magicButtonUp,AssetLoader.magicButtonDown, screenHeight));
+	    powerUpButtons.add(new SimpleButton((screenWidth-SIZE*width)/2+SIZE*4, (screenHeight-SIZE*height)/2-SIZE*2, SIZE, SIZE,AssetLoader.magicButtonUp,AssetLoader.magicButtonDown, screenHeight));
+	    powerUpButtons.add(new SimpleButton((screenWidth-SIZE*width)/2, (screenHeight-SIZE*height)/2-SIZE*2, SIZE, SIZE,AssetLoader.magicButtonUp,AssetLoader.magicButtonDown, screenHeight));
 	}
 	
 	public float getScreenWidth(){
@@ -74,6 +90,10 @@ public class GameWorld{
 
 	public void setIcon(int row, int col, Icon icon) {
 		grid[row][col] = icon;		
+	}
+	
+	public Icon[][] getGrid(){
+		return grid;
 	}
 
 
@@ -95,6 +115,18 @@ public class GameWorld{
 		return magic;
 	}
 	
+	public void setMagic(int n){
+		magic = n;
+	}
+	
+	public Timer getTimer(){
+		return timer;
+	}
+	
+	public Generator getGenerator(){
+		return gen;
+	}
+	
 	public boolean getCollapsing(){
 		return collapsing;
 	}
@@ -103,6 +135,9 @@ public class GameWorld{
 		return filling;
 	}
 	
+	public int getWaitingTime(){
+		return waitingTime;
+	}
 	public int getFlashingState(){
 		return flashingState;
 	}
@@ -156,6 +191,10 @@ public class GameWorld{
 	
 	public void setCurrentState(GameState s){
 		currentState = s;
+	}
+	
+	public ArrayList<SimpleButton> getPowerUpButtons(){
+		return powerUpButtons;
 	}
 	
 	public boolean isRunning(){
@@ -303,10 +342,11 @@ public class GameWorld{
 	    
 	    if(aListTemp.size()>0){	    
 	    	for(int i=0;i<aListTemp.size();i++){
-	    		if(aListTemp.get(i).getIcon().getSpecial()==1){
+	    		if(aListTemp.get(i).getIcon().getSpecial()==1)
 	    			magic++;
-	    		}
-	    	}
+	    		else if(aListTemp.get(i).getIcon().getSpecial()==3)
+	    			life++;
+	    	} 
 	    }
 	    return aListTemp;
 	}
@@ -384,6 +424,15 @@ public class GameWorld{
 	}
 	
 	public void updateRunning(){
+		if(!timer.getTimerIsOn()){
+			timer.start();
+		} else{
+			while(timer.hasCompleted()){
+				life--;
+				timer.stop();
+			}
+		}
+		
         if (flashingState == 0 && !collapsing && !filling){
         	diamondsToCollapse = findMatch(true);
             if (diamondsToCollapse.size() != 0){
@@ -448,10 +497,8 @@ public class GameWorld{
        
        if(life==0)
     	   currentState = GameState.GAMEOVER;
+       
 	}
 	
 
 }
-
-
-

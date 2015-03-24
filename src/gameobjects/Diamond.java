@@ -1,5 +1,6 @@
 package gameobjects;
 
+
 public class Diamond {
 	private int row;
 	private int col;

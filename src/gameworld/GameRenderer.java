@@ -2,6 +2,8 @@ package gameworld;
 
 
 
+import java.util.ArrayList;
+
 import gameobjects.Diamond;
 import gameobjects.Icon;
 
@@ -9,6 +11,7 @@ import gameobjects.Icon;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
@@ -18,6 +21,10 @@ import com.badlogic.gdx.scenes.scene2d.InputListener;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
+import gamehelpers.AssetLoader;
+import gameobjects.SimpleButton;
+import gameworld.AnimatedDiamond;
+import gameworld.GameWorld;
 
 
 public class GameRenderer {
@@ -31,41 +38,60 @@ public class GameRenderer {
 		      //Color.LIGHT_GRAY,
 		      Color.PINK};
     private GameWorld myWorld;
+    private OrthographicCamera cam;
     private ShapeRenderer shapeRenderer;
     private SpriteBatch batch;
     private BitmapFont font;
     private static float screenWidth;
     private static float screenHeight;
     private int flashingState;
-    private Stage stage;
-    private TextButton button;
+    private ArrayList<SimpleButton> powerUpButtons;
 
 
     public GameRenderer(GameWorld world,float w,float h) {
         myWorld = world;
         shapeRenderer = new ShapeRenderer();
-        batch = new SpriteBatch();    
+        batch = new SpriteBatch();  
+        cam = new OrthographicCamera();
+        cam.setToOrtho(true, screenWidth/2, screenHeight/2);
+        //batch.setProjectionMatrix(cam.combined);
         font = new BitmapFont(Gdx.files.internal("data/text.fnt"));
-        font.setScale(1.5f, 1.5f);
+        font.setScale(1f, 1f);
         screenWidth = w;
         screenHeight = h;
         flashingState = 0;
+        powerUpButtons= myWorld.getPowerUpButtons();
+        System.out.println(screenWidth);
+        System.out.println(screenHeight);
     }
     
 
     public void render() {
 
-        Gdx.gl.glClearColor(0,0,0,1);
+    	Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-
-        batch.begin();
         
-        font.draw(batch, "SCORE:"+myWorld.getScore(), screenWidth/2-150-(30*((myWorld.getScore()+"").length())), screenHeight*9/10);
-        font.draw(batch, "LIFE:"+myWorld.getLife(), screenWidth/2-100-(30*((myWorld.getLife()+"").length())), screenHeight/5);
-        font.draw(batch, "MAGIC:"+myWorld.getMagic(), screenWidth/2-150-(30*((myWorld.getLife()+"").length())), screenHeight/10);
+        batch.begin();
+        batch.disableBlending();
+        batch.draw(AssetLoader.bg, 0, 0, screenWidth, screenHeight);
         batch.end();
+        
+        for(SimpleButton button: powerUpButtons)
+        	button.draw(batch);
+/*        powerUpButtons.get(0).draw(batch);
+        powerUpButtons.get(5).draw(batch);*/
 
+       batch.begin();
+             
+        //font.draw(batch, "SCORE:"+myWorld.getScore(), screenWidth/2-150-(30*((myWorld.getScore()+"").length())), screenHeight*19/20);
+        font.draw(batch, "SCORE:"+myWorld.getScore(), (screenWidth-myWorld.SIZE*myWorld.getWidth())/2, screenHeight*19/20);
+        font.draw(batch, "LIFE:"+myWorld.getLife(), (screenWidth-myWorld.SIZE*myWorld.getWidth())/2, screenHeight*9/10);
+        font.draw(batch, "MAGIC:"+myWorld.getMagic(), (screenWidth-myWorld.SIZE*myWorld.getWidth())/2+300, screenHeight*9/10);
+        batch.end();
+        
         flashingState = (flashingState+1)%20;
+        
+        drawTimer(shapeRenderer, 1);
         
         for (int row = 0; row < myWorld.getHeight(); ++row){
         	for (int col = 0; col < myWorld.getWidth(); ++col){
@@ -73,7 +99,12 @@ public class GameRenderer {
         		if (t != null){
         			drawOneCell(shapeRenderer, row, col, t);
         			if(t.getSpecial()==1&&(t.getSpecialState()>1||(t.getSpecialState()==1&&flashingState<10)))
-        				drawOneSpecialCell(shapeRenderer, row, col);    			
+        				drawOneSpecialCell(shapeRenderer, row, col,Color.WHITE); 
+        			else if(t.getSpecial()==2)
+        				drawOneSpecialCell(shapeRenderer, row, col,Color.BLACK);
+        			else if(t.getSpecial()==3)
+        				drawOneSpecialCell(shapeRenderer, row, col, Color.GRAY);
+        				
         		}
 
           }
@@ -122,30 +153,9 @@ public class GameRenderer {
           
         }
         
-        stage = new Stage();        //** window is stage **//
-        stage.clear();
-        Gdx.input.setInputProcessor(stage); //** stage is responsive **//
-        
-        TextButtonStyle style = new TextButtonStyle(); //** Button properties **//       
-        style.font = font;
-        
-        button = new TextButton("PRESS ME", style); //** Button text and style **//
-        button.setPosition(100, 100); //** Button location **//
-        button.setHeight(300); //** Button Height **//
-        button.setWidth(600); //** Button Width **//
-        button.addListener(new InputListener() {
-            public boolean touchDown (InputEvent event, float x, float y, int pointer, int button) {
-                    Gdx.app.log("my app", "Pressed"); //** Usually used to start Game, etc. **//
-                    return true;
-            }
-            
-            public void touchUp (InputEvent event, float x, float y, int pointer, int button) {
-                    Gdx.app.log("my app", "Released");
-            }
-        });
-        
         
     }
+    
     
     private void drawOneCell(ShapeRenderer sr, int row, int col, Icon t){
     	sr.begin(ShapeType.Filled);
@@ -187,15 +197,27 @@ public class GameRenderer {
     	sr.end();
     }
     
-    private void drawOneSpecialCell(ShapeRenderer sr, int row, int col){
+    private void drawOneSpecialCell(ShapeRenderer sr, int row, int col,Color c){
     	sr.begin(ShapeType.Filled);
-    	sr.setColor(Color.WHITE);
+    	sr.setColor(c);
     	sr.circle((screenWidth-myWorld.SIZE*myWorld.getWidth())/2+myWorld.SIZE*(col)+myWorld.SIZE/2, screenHeight-(screenHeight-myWorld.SIZE*myWorld.getHeight())/2-myWorld.SIZE*(row)-myWorld.SIZE/2, myWorld.SIZE/4);
     	sr.end();
     }
     
+    private void drawTimer(ShapeRenderer sr, long timeElapsed){
+    	sr.begin(ShapeType.Filled);
+    	sr.setColor(Color.WHITE);
+    	sr.rect((screenWidth-myWorld.SIZE*myWorld.getWidth())/2, screenHeight*4/5, myWorld.SIZE*myWorld.getWidth()-myWorld.SIZE*myWorld.getWidth()*myWorld.getTimer().getTimeElapsed()/myWorld.getWaitingTime(), 30);
+    	sr.end();
+    }
     
-    
+    private void drawButton(ShapeRenderer sr, float x, float y, Color c){
+    	sr.begin(ShapeType.Filled);
+    	sr.setColor(c);
+    	sr.rect(x, y, screenWidth-(screenWidth-myWorld.SIZE*myWorld.getWidth())/2-x, 100);
+    	sr.end();
+    }
+            
     private void paintOneCellByPixel(ShapeRenderer sr, float rowPixel, int col, Icon t){
     	
     	sr.begin(ShapeType.Filled);
@@ -207,6 +229,7 @@ public class GameRenderer {
     	sr.rect((screenWidth-myWorld.SIZE*myWorld.getWidth())/2+myWorld.SIZE*col, rowPixel, myWorld.SIZE-1, myWorld.SIZE-1);
     	sr.end();
     }
+    
     
 }
 
@@ -243,5 +266,6 @@ class AnimatedDiamond extends Diamond{
 			currentPixel = endPixel;
 		}
 	}
+	
 }
 

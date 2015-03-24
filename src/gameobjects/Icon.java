@@ -1,6 +1,5 @@
 package gameobjects;
 
-
 public class Icon {
 	private final int type;
 	private int special;
