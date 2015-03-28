@@ -1,48 +1,50 @@
 package screens;
 
-
 import gamehelpers.Generator;
-import gamehelpers.InputHandler;
-import gameworld.GameRenderer;
-import gameworld.GameWorld;
+import gamehelpers.SkillInput;
+import gameworld.SkillRenderer;
+import gameworld.SkillWorld;
 
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 
-public class GameScreen implements Screen{
-    private GameWorld world;
-    private GameRenderer renderer;
+public class SkillScreen implements Screen{
+	private SkillWorld world;
+    private SkillRenderer renderer;
     private Game game;
-    
-    public GameScreen(Game game) {
+    public SkillScreen(Game game) {
     	this.game = game;
     	float screenWidth = Gdx.graphics.getWidth();
         float screenHeight = Gdx.graphics.getHeight();
 /*        float gameWidth = 136;
         float gameHeight = screenHeight / (screenWidth / gameWidth);*/
-        world = new GameWorld(7,5, new Generator(6),screenWidth,screenHeight);
-        renderer = new GameRenderer(world,screenWidth,screenHeight);
+        world = new SkillWorld(7,5, new Generator(6),screenWidth,screenHeight);
+        renderer = new SkillRenderer(world,screenWidth,screenHeight);
         
-        Gdx.input.setInputProcessor(new InputHandler(world));
+        Gdx.input.setInputProcessor(new SkillInput(world));
     }
 
 
 	@Override
 	public void show() {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
 	public void render(float delta) {
+		if(Gdx.input.justTouched()){
+            game.setScreen(new GameScreen(game));
+		}
 		 world.update();
-	     renderer .render();
+	     renderer.render();
 	}
 
 	@Override
 	public void resize(int width, int height) {
 		// TODO Auto-generated method stub
+		//play.setBounds(0,568,720,164);
 		
 	}
 
