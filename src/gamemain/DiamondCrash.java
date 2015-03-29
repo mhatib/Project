@@ -1,7 +1,7 @@
 package gamemain;
 
 import gamehelpers.AssetLoader;
-import screens.SkillScreen;
+import screens.StartScreen;
 
 import com.badlogic.gdx.Game;
 
@@ -10,7 +10,7 @@ public class DiamondCrash extends Game{
 	@Override
 	public void create() {
 		AssetLoader.load();
-		setScreen(new SkillScreen(this));
+		setScreen(new StartScreen(this));
 	}
 	
 	@Override

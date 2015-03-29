@@ -1,19 +1,21 @@
 package gamehelpers;
 
-import screens.GameScreen;
-import gameworld.GameWorld;
+import gameobjects.SimpleButton;
 import gameworld.SkillWorld;
+import screens.GameScreen;
 
 import com.badlogic.gdx.Game;
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputProcessor;
 
 public class SkillInput implements InputProcessor{
 	SkillWorld myWorld;
+	SimpleButton begin;
+	private Game game;;
 	
-    public SkillInput(SkillWorld world) {
+    public SkillInput(SkillWorld world, Game game) {
         myWorld = world;
-        //powerUpButtons = myWorld.getPowerUpButtons();
+        begin = myWorld.getBeginButton();
+        this.game = game;
     }
 	
 	@Override
@@ -36,9 +38,11 @@ public class SkillInput implements InputProcessor{
 
 	@Override
 	public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+		if (begin.isTouchDown(screenX, screenY)){
+			game.setScreen(new GameScreen(game));
+		}
 		// TODO Auto-generated method stub
-		myWorld.changeScreen();
-		return true;
+		return false;
 	}
 
 	@Override
